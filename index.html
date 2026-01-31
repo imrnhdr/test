@@ -294,7 +294,7 @@ footer {
     <main id="articles"></main>
 
     <footer>
-        <p>Sources: Google News, TechCrunch, IEEE Spectrum, MIT Technology Review, SpaceNews, Ars Technica</p>
+        <p>Curated from: WSJ, NYT, Bloomberg, Reuters, FT, Economist, TechCrunch, Wired, The Verge, IEEE Spectrum, MIT Tech Review, Defense News, SpaceNews, Nature, Nikkei, SCMP &amp; more</p>
     </footer>
 
 <script>
@@ -307,6 +307,73 @@ footer {
         "https://api.allorigins.win/raw?url=",
         "https://api.codetabs.com/v1/proxy?quest="
     ];
+
+    // ── Approved Sources ──────────────────────────────────────────────────
+    // Only well-established US/UK publications + Nikkei + SCMP.
+    // Matched against the <source> text and <source url> from Google News RSS.
+    var ALLOWED_DOMAINS = [
+        // ── US: Major news & business ──
+        "wsj.com", "nytimes.com", "bloomberg.com", "reuters.com",
+        "cnbc.com", "forbes.com", "fortune.com", "businessinsider.com",
+        "barrons.com", "apnews.com", "washingtonpost.com", "politico.com",
+        "axios.com", "semafor.com", "inc.com",
+        // ── UK: Major news & business ──
+        "ft.com", "economist.com", "theguardian.com",
+        "bbc.com", "bbc.co.uk", "thetimes.co.uk", "telegraph.co.uk",
+        // ── US/UK: Tech ──
+        "techcrunch.com", "theverge.com", "wired.com", "arstechnica.com",
+        "technologyreview.com", "spectrum.ieee.org", "theinformation.com",
+        // ── US: Defense & aerospace ──
+        "defensenews.com", "defenseone.com", "breakingdefense.com",
+        "c4isrnet.com", "aviationweek.com", "spacenews.com", "thedrive.com",
+        // ── UK: Defense ──
+        "janes.com",
+        // ── Science (US/UK) ──
+        "nature.com", "science.org", "scientificamerican.com",
+        "newscientist.com",
+        // ── Exceptions (non-US/UK) ──
+        "nikkei.com", "asia.nikkei.com",
+        "scmp.com"
+    ];
+
+    // Source name patterns (case-insensitive) for when URL isn't available
+    var ALLOWED_NAMES = [
+        "wall street journal", "wsj",
+        "new york times", "nyt",
+        "bloomberg", "reuters", "cnbc", "forbes", "fortune",
+        "business insider", "barron", "associated press", "ap news",
+        "washington post", "politico", "axios", "semafor",
+        "financial times", "economist", "guardian", "bbc",
+        "the times", "telegraph",
+        "techcrunch", "the verge", "wired", "ars technica",
+        "mit technology review", "ieee spectrum", "the information",
+        "defense news", "defense one", "breaking defense",
+        "c4isrnet", "aviation week", "spacenews", "space news",
+        "the war zone", "jane",
+        "nature", "science", "scientific american", "new scientist",
+        "nikkei", "south china morning post", "scmp",
+        "inc."
+    ];
+
+    function isAllowedSource(source, sourceUrl) {
+        // Check domain from <source url="..."> attribute
+        if (sourceUrl) {
+            var lower = sourceUrl.toLowerCase();
+            for (var i = 0; i < ALLOWED_DOMAINS.length; i++) {
+                if (lower.indexOf(ALLOWED_DOMAINS[i]) !== -1) return true;
+            }
+        }
+        // Check source name text
+        if (source) {
+            var name = source.toLowerCase();
+            for (var j = 0; j < ALLOWED_NAMES.length; j++) {
+                if (name.indexOf(ALLOWED_NAMES[j]) !== -1) return true;
+            }
+        }
+        return false;
+    }
+
+    // ── Feed URLs ─────────────────────────────────────────────────────────
 
     function gnUrl(query) {
         return "https://news.google.com/rss/search?q=" +
@@ -416,6 +483,9 @@ footer {
                 var pubDate = item.querySelector("pubDate");
                 var source = item.querySelector("source");
 
+                var sourceName = source ? source.textContent.trim() : "";
+                var sourceUrl = source ? (source.getAttribute("url") || "") : "";
+
                 var descText = stripHtml(desc ? desc.textContent : "");
                 if (descText.length > 300) descText = descText.substring(0, 297) + "...";
 
@@ -424,7 +494,8 @@ footer {
                     link: link.textContent.trim(),
                     description: descText,
                     date: pubDate ? pubDate.textContent.trim() : "",
-                    source: source ? source.textContent.trim() : ""
+                    source: sourceName,
+                    sourceUrl: sourceUrl
                 });
             }
 
@@ -528,8 +599,12 @@ footer {
             for (var i = 0; i < results.length; i++) {
                 var cat = results[i].category;
                 var articles = results[i].articles;
+                // Articles from direct publication feeds are pre-approved
+                var isDirectFeed = (cat === "Publications");
                 for (var j = 0; j < articles.length; j++) {
                     var a = articles[j];
+                    // Filter: only keep articles from approved sources
+                    if (!isDirectFeed && !isAllowedSource(a.source, a.sourceUrl)) continue;
                     var key = a.title.toLowerCase().trim();
                     if (seen[key]) continue;
                     seen[key] = true;

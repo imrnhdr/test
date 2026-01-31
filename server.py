@@ -101,6 +101,69 @@ PUBLICATION_FEEDS = [
     ("MIT Tech Review", "https://www.technologyreview.com/feed/"),
 ]
 
+# ── Source Whitelist ──────────────────────────────────────────────────────────
+# Only well-established US/UK publications, plus Nikkei and SCMP.
+# Google News RSS items are filtered against these. Direct publication feeds
+# above are always trusted.
+
+ALLOWED_DOMAINS = {
+    # US: major news & business
+    "wsj.com", "nytimes.com", "bloomberg.com", "reuters.com",
+    "cnbc.com", "forbes.com", "fortune.com", "businessinsider.com",
+    "barrons.com", "apnews.com", "washingtonpost.com", "politico.com",
+    "axios.com", "semafor.com", "inc.com",
+    # UK: major news & business
+    "ft.com", "economist.com", "theguardian.com",
+    "bbc.com", "bbc.co.uk", "thetimes.co.uk", "telegraph.co.uk",
+    # US/UK: tech
+    "techcrunch.com", "theverge.com", "wired.com", "arstechnica.com",
+    "technologyreview.com", "spectrum.ieee.org", "theinformation.com",
+    # US: defense & aerospace
+    "defensenews.com", "defenseone.com", "breakingdefense.com",
+    "c4isrnet.com", "aviationweek.com", "spacenews.com", "thedrive.com",
+    # UK: defense
+    "janes.com",
+    # Science (US/UK)
+    "nature.com", "science.org", "scientificamerican.com",
+    "newscientist.com",
+    # Exceptions (non-US/UK)
+    "nikkei.com", "asia.nikkei.com",
+    "scmp.com",
+}
+
+ALLOWED_NAMES = [
+    "wall street journal", "wsj",
+    "new york times", "nyt",
+    "bloomberg", "reuters", "cnbc", "forbes", "fortune",
+    "business insider", "barron", "associated press", "ap news",
+    "washington post", "politico", "axios", "semafor",
+    "financial times", "economist", "guardian", "bbc",
+    "the times", "telegraph",
+    "techcrunch", "the verge", "wired", "ars technica",
+    "mit technology review", "ieee spectrum", "the information",
+    "defense news", "defense one", "breaking defense",
+    "c4isrnet", "aviation week", "spacenews", "space news",
+    "the war zone", "jane",
+    "nature", "science", "scientific american", "new scientist",
+    "nikkei", "south china morning post", "scmp",
+    "inc.",
+]
+
+
+def _is_allowed_source(source_name, source_url):
+    """Return True if article is from a whitelisted publication."""
+    if source_url:
+        lower = source_url.lower()
+        for domain in ALLOWED_DOMAINS:
+            if domain in lower:
+                return True
+    if source_name:
+        name = source_name.lower()
+        for pattern in ALLOWED_NAMES:
+            if pattern in name:
+                return True
+    return False
+
 # ── RSS Parser ─────────────────────────────────────────────────────────────────
 
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -147,8 +210,11 @@ def _parse_rss_item(item):
 
     source_el = item.find("source")
     source = ""
-    if source_el is not None and source_el.text:
-        source = source_el.text.strip()
+    source_url = ""
+    if source_el is not None:
+        if source_el.text:
+            source = source_el.text.strip()
+        source_url = source_el.get("url", "")
 
     return {
         "title": title,
@@ -156,6 +222,7 @@ def _parse_rss_item(item):
         "description": desc,
         "date": _parse_date(_el_text(item, "pubDate")),
         "source": source,
+        "source_url": source_url,
     }
 
 
@@ -246,8 +313,16 @@ def fetch_all_news():
         }
         for future in as_completed(future_map):
             cat, _ = future_map[future]
+            # Articles from direct publication feeds are pre-approved
+            is_direct = cat == "Publications"
             try:
                 for article in future.result():
+                    # Filter: only keep articles from approved sources
+                    if not is_direct and not _is_allowed_source(
+                        article.get("source", ""),
+                        article.get("source_url", ""),
+                    ):
+                        continue
                     key = article["title"].lower().strip()
                     if key in seen:
                         continue
