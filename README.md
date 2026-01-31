@@ -1,10 +1,28 @@
 # Hard Tech News Aggregator
 
-A news aggregator that pulls the latest hard tech and deep tech startup news every time you open it.
+A news aggregator that pulls the latest hard tech and deep tech startup news every time you open it. Works on any device with a browser — iPad, phone, or desktop.
+
+## Usage
+
+**Option 1 — GitHub Pages (iPad / any device):**
+
+Visit the hosted page (enable GitHub Pages on this repo pointing to the branch root).
+
+**Option 2 — Open locally:**
+
+Open `index.html` directly in any browser. It fetches news client-side via CORS proxy.
+
+**Option 3 — Python server (desktop):**
+
+```bash
+python server.py
+```
+
+Starts a local server and opens the dashboard. Faster and more reliable since feeds are fetched server-side.
 
 ## Topics Covered
 
-- **Hard Tech / Deep Tech** - General hard tech startup news, funding, venture capital
+- **Hard Tech / Deep Tech** - Startup news, funding, venture capital
 - **Defense & Aerospace** - Defense technology, military startups (Anduril, Shield AI, etc.)
 - **Energy & Nuclear** - Nuclear fusion, SMRs, clean energy, climate tech
 - **Robotics** - Industrial automation, humanoid robots, robotics startups
@@ -14,34 +32,14 @@ A news aggregator that pulls the latest hard tech and deep tech startup news eve
 - **Manufacturing** - Advanced manufacturing, 3D printing, additive manufacturing
 - **Quantum & Computing** - Quantum computing, photonics
 
-## Usage
-
-```bash
-python server.py
-```
-
-This starts a local server and opens your browser to the news dashboard. The aggregator fetches fresh articles from all sources on each load.
-
-### Requirements
-
-- Python 3.6+ (standard library only, no pip install needed)
-
-### Keyboard Shortcuts
-
-- `/` - Focus the search/filter bar
-- `Escape` - Clear search and unfocus
-
 ## How It Works
 
-1. A lightweight Python HTTP server starts on a random free port
-2. The browser opens automatically to the dashboard
-3. The frontend calls `/api/news` which fetches RSS feeds in parallel
-4. Articles are deduplicated, categorized, and sorted by date
-5. Click any article card to open it in a new tab
+1. On load, fetches RSS feeds from Google News and tech publications
+2. Articles are deduplicated, categorized, and sorted newest-first
+3. Filter by category tabs or search by keyword
+4. Click any card to read the full article
 
 ## Sources
-
-News is aggregated from:
 
 - **Google News RSS** - Targeted searches for each hard tech category
 - **TechCrunch** - Hardware section
