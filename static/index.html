@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hard Tech News</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <h1>Hard Tech News</h1>
+            <p class="subtitle">Deep tech &middot; Defense &middot; Energy &middot; Robotics &middot; Space &middot; Semiconductors &middot; Biotech</p>
+        </div>
+        <div class="header-right">
+            <span id="article-count" class="count-badge"></span>
+            <button id="refresh-btn" class="icon-btn" title="Refresh news">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <nav id="categories" role="tablist"></nav>
+
+    <div id="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Filter articles..." autocomplete="off">
+    </div>
+
+    <div id="status" class="hidden">
+        <div class="spinner"></div>
+        <span>Fetching latest hard tech news...</span>
+    </div>
+
+    <div id="error" class="hidden">
+        <p>Failed to load news. Make sure the server is running.</p>
+        <button onclick="loadNews()">Try Again</button>
+    </div>
+
+    <main id="articles"></main>
+
+    <footer>
+        <p>Sources: Google News, TechCrunch, IEEE Spectrum, MIT Technology Review, SpaceNews, Ars Technica</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
