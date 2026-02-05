@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Hard Tech News</title>
+    <style>
+/* ── Reset & Base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #0a0e17;
+    --bg-card: #111827;
+    --bg-card-hover: #1a2332;
+    --border: #1e293b;
+    --border-light: #2a3a52;
+    --text: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-dim: #64748b;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-glow: rgba(59, 130, 246, 0.15);
+}
+
+html {
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    line-height: 1.6;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.25rem 0.75rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+
+.subtitle {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.1rem;
+    letter-spacing: 0.02em;
+}
+
+.header-right { display: flex; align-items: center; gap: 0.6rem; }
+
+.count-badge {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.55rem;
+    border-radius: 100px;
+    white-space: nowrap;
+}
+
+.icon-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn:hover, .icon-btn:active {
+    background: var(--bg-card-hover);
+    color: var(--text);
+    border-color: var(--border-light);
+}
+
+.icon-btn.spinning svg { animation: spin 0.8s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Category Nav ──────────────────────────────────────────────────────── */
+nav#categories {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.6rem 1.25rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+nav#categories::-webkit-scrollbar { display: none; }
+
+.cat-btn {
+    flex-shrink: 0;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+.cat-btn:hover, .cat-btn:active { background: var(--bg-card-hover); color: var(--text); border-color: var(--border-light); }
+.cat-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cat-btn .cat-count { font-size: 0.68rem; opacity: 0.7; margin-left: 0.25rem; }
+
+/* ── Search Bar ────────────────────────────────────────────────────────── */
+#search-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    max-width: 1400px; margin: 0 auto; padding: 0 1.25rem 0.6rem;
+}
+#search-bar svg { color: var(--text-dim); flex-shrink: 0; }
+#search-input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+    -webkit-appearance: none;
+}
+#search-input::placeholder { color: var(--text-dim); }
+#search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* ── Status & Error ────────────────────────────────────────────────────── */
+#status, #error {
+    text-align: center;
+    padding: 4rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+#status { display: flex; flex-direction: column; align-items: center; gap: 1rem; color: var(--text-secondary); }
+#status .status-detail { font-size: 0.75rem; color: var(--text-dim); }
+
+.spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+#error { color: var(--text-secondary); }
+#error button {
+    margin-top: 1rem; padding: 0.5rem 1.5rem;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-size: 0.85rem; font-weight: 500;
+}
+.hidden { display: none !important; }
+
+/* ── Articles Grid ─────────────────────────────────────────────────────── */
+main#articles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 0.85rem;
+    padding: 0.4rem 1.25rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ── Article Card ──────────────────────────────────────────────────────── */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+.card:hover, .card:active { background: var(--bg-card-hover); border-color: var(--border-light); }
+
+.card-meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+.card-category {
+    font-size: 0.62rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 0.12rem 0.45rem; border-radius: 4px;
+}
+
+.card-category[data-cat="Hard Tech"]           { color: #3b82f6; background: rgba(59,130,246,0.12); }
+.card-category[data-cat="Defense & Aerospace"] { color: #ef4444; background: rgba(239,68,68,0.12); }
+.card-category[data-cat="Energy & Nuclear"]    { color: #f59e0b; background: rgba(245,158,11,0.12); }
+.card-category[data-cat="Robotics"]            { color: #8b5cf6; background: rgba(139,92,246,0.12); }
+.card-category[data-cat="Semiconductors"]      { color: #06b6d4; background: rgba(6,182,212,0.12); }
+.card-category[data-cat="Biotech"]             { color: #10b981; background: rgba(16,185,129,0.12); }
+.card-category[data-cat="Space"]               { color: #6366f1; background: rgba(99,102,241,0.12); }
+.card-category[data-cat="Manufacturing"]       { color: #f97316; background: rgba(249,115,22,0.12); }
+.card-category[data-cat="Quantum & Computing"] { color: #ec4899; background: rgba(236,72,153,0.12); }
+.card-category[data-cat="Publications"]        { color: #94a3b8; background: rgba(148,163,184,0.12); }
+
+.card-source { font-size: 0.7rem; color: var(--text-dim); }
+.card-date   { font-size: 0.7rem; color: var(--text-dim); margin-left: auto; }
+
+.card-title { font-size: 0.92rem; font-weight: 600; line-height: 1.4; color: var(--text); }
+.card:hover .card-title, .card:active .card-title { color: var(--accent); }
+
+.card-desc {
+    font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+footer {
+    text-align: center; padding: 1.5rem 1rem;
+    color: var(--text-dim); font-size: 0.7rem;
+    border-top: 1px solid var(--border);
+    max-width: 1400px; margin: 0 auto;
+}
+
+.empty-state {
+    grid-column: 1 / -1; text-align: center;
+    padding: 3rem 1rem; color: var(--text-dim); font-size: 0.9rem;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+    header { padding: 1.5rem 2rem 0.75rem; }
+    nav#categories { padding: 0.6rem 2rem; }
+    #search-bar { padding: 0 2rem 0.6rem; }
+    main#articles { padding: 0.4rem 2rem 3rem; }
+    header h1 { font-size: 1.6rem; }
+}
+
+@media (max-width: 420px) {
+    .subtitle { display: none; }
+    main#articles { grid-template-columns: 1fr; }
+}
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Hard Tech News</h1>
+            <p class="subtitle">Deep tech &middot; Defense &middot; Energy &middot; Robotics &middot; Space &middot; Semis &middot; Biotech</p>
+        </div>
+        <div class="header-right">
+            <span id="article-count" class="count-badge"></span>
+            <button id="refresh-btn" class="icon-btn" title="Refresh news">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <nav id="categories" role="tablist"></nav>
+
+    <div id="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Filter articles..." autocomplete="off">
+    </div>
+
+    <div id="status">
+        <div class="spinner"></div>
+        <span>Fetching latest hard tech news...</span>
+        <span class="status-detail" id="status-detail"></span>
+    </div>
+
+    <div id="error" class="hidden">
+        <p>Failed to load news. Check your connection and try again.</p>
+        <button onclick="loadNews()">Try Again</button>
+    </div>
+
+    <main id="articles"></main>
+
+    <footer>
+        <p>Curated from: WSJ, NYT, Bloomberg, Reuters, FT, Economist, TechCrunch, Wired, The Verge, IEEE Spectrum, MIT Tech Review, Defense News, SpaceNews, Nature, Nikkei, SCMP &amp; more</p>
+    </footer>
+
+<script>
+(function () {
+    "use strict";
+
+    // ── Configuration ─────────────────────────────────────────────────────
+
+    var CORS_PROXIES = [
+        "https://api.allorigins.win/raw?url=",
+        "https://api.codetabs.com/v1/proxy?quest="
+    ];
+
+    // ── Approved Sources ──────────────────────────────────────────────────
+    // Only well-established US/UK publications + Nikkei + SCMP.
+    // Matched against the <source> text and <source url> from Google News RSS.
+    var ALLOWED_DOMAINS = [
+        // ── US: Major news & business ──
+        "wsj.com", "nytimes.com", "bloomberg.com", "reuters.com",
+        "cnbc.com", "forbes.com", "fortune.com", "businessinsider.com",
+        "barrons.com", "apnews.com", "washingtonpost.com", "politico.com",
+        "axios.com", "semafor.com", "inc.com",
+        // ── UK: Major news & business ──
+        "ft.com", "economist.com", "theguardian.com",
+        "bbc.com", "bbc.co.uk", "thetimes.co.uk", "telegraph.co.uk",
+        // ── US/UK: Tech ──
+        "techcrunch.com", "theverge.com", "wired.com", "arstechnica.com",
+        "technologyreview.com", "spectrum.ieee.org", "theinformation.com",
+        // ── US: Defense & aerospace ──
+        "defensenews.com", "defenseone.com", "breakingdefense.com",
+        "c4isrnet.com", "aviationweek.com", "spacenews.com", "thedrive.com",
+        // ── UK: Defense ──
+        "janes.com",
+        // ── Science (US/UK) ──
+        "nature.com", "science.org", "scientificamerican.com",
+        "newscientist.com",
+        // ── Exceptions (non-US/UK) ──
+        "nikkei.com", "asia.nikkei.com",
+        "scmp.com"
+    ];
+
+    // Source name patterns (case-insensitive) for when URL isn't available
+    var ALLOWED_NAMES = [
+        "wall street journal", "wsj",
+        "new york times", "nyt",
+        "bloomberg", "reuters", "cnbc", "forbes", "fortune",
+        "business insider", "barron", "associated press", "ap news",
+        "washington post", "politico", "axios", "semafor",
+        "financial times", "economist", "guardian", "bbc",
+        "the times", "telegraph",
+        "techcrunch", "the verge", "wired", "ars technica",
+        "mit technology review", "ieee spectrum", "the information",
+        "defense news", "defense one", "breaking defense",
+        "c4isrnet", "aviation week", "spacenews", "space news",
+        "the war zone", "jane",
+        "nature", "science", "scientific american", "new scientist",
+        "nikkei", "south china morning post", "scmp",
+        "inc."
+    ];
+
+    function isAllowedSource(source, sourceUrl) {
+        // Check domain from <source url="..."> attribute
+        if (sourceUrl) {
+            var lower = sourceUrl.toLowerCase();
+            for (var i = 0; i < ALLOWED_DOMAINS.length; i++) {
+                if (lower.indexOf(ALLOWED_DOMAINS[i]) !== -1) return true;
+            }
+        }
+        // Check source name text
+        if (source) {
+            var name = source.toLowerCase();
+            for (var j = 0; j < ALLOWED_NAMES.length; j++) {
+                if (name.indexOf(ALLOWED_NAMES[j]) !== -1) return true;
+            }
+        }
+        return false;
+    }
+
+    // ── Feed URLs ─────────────────────────────────────────────────────────
+
+    function gnUrl(query) {
+        return "https://news.google.com/rss/search?q=" +
+            encodeURIComponent(query) + "+when:7d&hl=en-US&gl=US&ceid=US:en";
+    }
+
+    var CATEGORY_FEEDS = {
+        "Hard Tech": [
+            gnUrl('"hard tech" startup'),
+            gnUrl('"deep tech" startup funding'),
+            gnUrl("hardtech deeptech venture capital")
+        ],
+        "Defense & Aerospace": [
+            gnUrl("defense tech startup funding"),
+            gnUrl("defense technology military startup"),
+            gnUrl("Anduril OR Palantir OR Shield AI defense")
+        ],
+        "Energy & Nuclear": [
+            gnUrl("nuclear fusion startup"),
+            gnUrl("nuclear energy small modular reactor"),
+            gnUrl("clean energy climate tech startup funding")
+        ],
+        "Robotics": [
+            gnUrl("robotics startup funding"),
+            gnUrl("humanoid robot startup"),
+            gnUrl("industrial automation robotics")
+        ],
+        "Semiconductors": [
+            gnUrl("semiconductor chip startup"),
+            gnUrl("chip manufacturing startup funding")
+        ],
+        "Biotech": [
+            gnUrl("biotech startup funding"),
+            gnUrl("synthetic biology gene therapy startup")
+        ],
+        "Space": [
+            gnUrl("space technology startup"),
+            gnUrl("satellite launch startup funding"),
+            "https://spacenews.com/feed/"
+        ],
+        "Manufacturing": [
+            gnUrl('"advanced manufacturing" startup'),
+            gnUrl("3D printing additive manufacturing startup")
+        ],
+        "Quantum & Computing": [
+            gnUrl("quantum computing startup"),
+            gnUrl("photonics computing startup")
+        ]
+    };
+
+    var PUBLICATION_FEEDS = [
+        "https://techcrunch.com/category/hardware/feed/",
+        "https://spectrum.ieee.org/feeds/feed.rss",
+        "https://feeds.arstechnica.com/arstechnica/science",
+        "https://www.technologyreview.com/feed/"
+    ];
+
+    var CATEGORY_ORDER = [
+        "All", "Hard Tech", "Defense & Aerospace", "Energy & Nuclear",
+        "Robotics", "Semiconductors", "Biotech", "Space",
+        "Manufacturing", "Quantum & Computing", "Publications"
+    ];
+
+    // ── State ─────────────────────────────────────────────────────────────
+
+    var newsData = {};
+    var activeCategory = "All";
+    var searchQuery = "";
+    var workingProxy = 0;
+
+    // ── DOM ───────────────────────────────────────────────────────────────
+
+    var $categories = document.getElementById("categories");
+    var $articles   = document.getElementById("articles");
+    var $status     = document.getElementById("status");
+    var $detail     = document.getElementById("status-detail");
+    var $error      = document.getElementById("error");
+    var $count      = document.getElementById("article-count");
+    var $refresh    = document.getElementById("refresh-btn");
+    var $search     = document.getElementById("search-input");
+
+    // ── RSS Parsing ───────────────────────────────────────────────────────
+
+    function stripHtml(s) {
+        if (!s) return "";
+        var div = document.createElement("div");
+        div.innerHTML = s;
+        var text = div.textContent || div.innerText || "";
+        return text.replace(/\s+/g, " ").trim();
+    }
+
+    function parseRssText(xmlText) {
+        var articles = [];
+        try {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(xmlText, "text/xml");
+
+            // RSS 2.0
+            var items = doc.querySelectorAll("item");
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var title = item.querySelector("title");
+                var link = item.querySelector("link");
+                if (!title || !link) continue;
+
+                var desc = item.querySelector("description");
+                var pubDate = item.querySelector("pubDate");
+                var source = item.querySelector("source");
+
+                var sourceName = source ? source.textContent.trim() : "";
+                var sourceUrl = source ? (source.getAttribute("url") || "") : "";
+
+                var descText = stripHtml(desc ? desc.textContent : "");
+                if (descText.length > 300) descText = descText.substring(0, 297) + "...";
+
+                articles.push({
+                    title: title.textContent.trim(),
+                    link: link.textContent.trim(),
+                    description: descText,
+                    date: pubDate ? pubDate.textContent.trim() : "",
+                    source: sourceName,
+                    sourceUrl: sourceUrl
+                });
+            }
+
+            // Atom (if no RSS items found)
+            if (articles.length === 0) {
+                var entries = doc.querySelectorAll("entry");
+                for (var j = 0; j < entries.length; j++) {
+                    var entry = entries[j];
+                    var eTitle = entry.querySelector("title");
+                    var eLink = entry.querySelector("link[rel='alternate']") || entry.querySelector("link");
+                    if (!eTitle || !eLink) continue;
+
+                    var eSummary = entry.querySelector("summary") || entry.querySelector("content");
+                    var eUpdated = entry.querySelector("updated") || entry.querySelector("published");
+
+                    var sText = stripHtml(eSummary ? eSummary.textContent : "");
+                    if (sText.length > 300) sText = sText.substring(0, 297) + "...";
+
+                    articles.push({
+                        title: eTitle.textContent.trim(),
+                        link: eLink.getAttribute("href") || "",
+                        description: sText,
+                        date: eUpdated ? eUpdated.textContent.trim() : "",
+                        source: ""
+                    });
+                }
+            }
+        } catch (e) {
+            // parsing failed, return empty
+        }
+        return articles;
+    }
+
+    // ── Fetching ──────────────────────────────────────────────────────────
+
+    function fetchViaProxy(url, proxyIndex) {
+        var proxy = CORS_PROXIES[proxyIndex || 0];
+        var fetchUrl = proxy + encodeURIComponent(url);
+        return fetch(fetchUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined })
+            .then(function (resp) {
+                if (!resp.ok) throw new Error("HTTP " + resp.status);
+                return resp.text();
+            });
+    }
+
+    function fetchFeed(url) {
+        return fetchViaProxy(url, workingProxy)
+            .then(parseRssText)
+            .catch(function () {
+                // Try next proxy
+                if (workingProxy + 1 < CORS_PROXIES.length) {
+                    return fetchViaProxy(url, workingProxy + 1)
+                        .then(function (text) {
+                            workingProxy = workingProxy + 1;
+                            return parseRssText(text);
+                        })
+                        .catch(function () { return []; });
+                }
+                return [];
+            });
+    }
+
+    function fetchAllNews() {
+        var tasks = [];
+        var taskMeta = [];
+
+        // Category feeds
+        var cats = Object.keys(CATEGORY_FEEDS);
+        for (var c = 0; c < cats.length; c++) {
+            var cat = cats[c];
+            var urls = CATEGORY_FEEDS[cat];
+            for (var u = 0; u < urls.length; u++) {
+                tasks.push(fetchFeed(urls[u]));
+                taskMeta.push(cat);
+            }
+        }
+
+        // Publication feeds
+        for (var p = 0; p < PUBLICATION_FEEDS.length; p++) {
+            tasks.push(fetchFeed(PUBLICATION_FEEDS[p]));
+            taskMeta.push("Publications");
+        }
+
+        var completed = 0;
+        var total = tasks.length;
+
+        // Wrap each promise to track progress
+        var tracked = tasks.map(function (promise, idx) {
+            return promise.then(function (articles) {
+                completed++;
+                $detail.textContent = completed + " / " + total + " feeds loaded";
+                return { articles: articles, category: taskMeta[idx] };
+            });
+        });
+
+        return Promise.all(tracked).then(function (results) {
+            var data = {};
+            var allArticles = [];
+            var seen = {};
+
+            for (var i = 0; i < results.length; i++) {
+                var cat = results[i].category;
+                var articles = results[i].articles;
+                // Articles from direct publication feeds are pre-approved
+                var isDirectFeed = (cat === "Publications");
+                for (var j = 0; j < articles.length; j++) {
+                    var a = articles[j];
+                    // Filter: only keep articles from approved sources
+                    if (!isDirectFeed && !isAllowedSource(a.source, a.sourceUrl)) continue;
+                    var key = a.title.toLowerCase().trim();
+                    if (seen[key]) continue;
+                    seen[key] = true;
+                    a.category = cat;
+                    if (!data[cat]) data[cat] = [];
+                    data[cat].push(a);
+                    allArticles.push(a);
+                }
+            }
+
+            // Sort by date
+            var dateSorter = function (a, b) {
+                var da = a.date ? new Date(a.date).getTime() : 0;
+                var db = b.date ? new Date(b.date).getTime() : 0;
+                return db - da;
+            };
+            var categories = Object.keys(data);
+            for (var k = 0; k < categories.length; k++) {
+                data[categories[k]].sort(dateSorter);
+            }
+            allArticles.sort(dateSorter);
+            data["All"] = allArticles;
+
+            return data;
+        });
+    }
+
+    // ── Load (try server first, fallback to client-side) ──────────────────
+
+    function loadNews() {
+        $status.classList.remove("hidden");
+        $error.classList.add("hidden");
+        $articles.innerHTML = "";
+        $count.textContent = "";
+        $detail.textContent = "";
+        $refresh.classList.add("spinning");
+
+        // Try the Python backend first (if running), else fetch client-side
+        fetch("/api/news")
+            .then(function (resp) {
+                if (!resp.ok) throw new Error("no server");
+                return resp.json();
+            })
+            .then(handleData)
+            .catch(function () {
+                // No server — fetch directly via CORS proxy
+                $detail.textContent = "0 / " + countFeeds() + " feeds loaded";
+                fetchAllNews().then(handleData).catch(function () {
+                    $status.classList.add("hidden");
+                    $refresh.classList.remove("spinning");
+                    $error.classList.remove("hidden");
+                });
+            });
+    }
+
+    window.loadNews = loadNews;
+
+    function countFeeds() {
+        var n = PUBLICATION_FEEDS.length;
+        var cats = Object.keys(CATEGORY_FEEDS);
+        for (var i = 0; i < cats.length; i++) n += CATEGORY_FEEDS[cats[i]].length;
+        return n;
+    }
+
+    function handleData(data) {
+        newsData = data;
+        $status.classList.add("hidden");
+        $refresh.classList.remove("spinning");
+        renderCategories();
+        renderArticles();
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────
+
+    function renderCategories() {
+        $categories.innerHTML = "";
+        for (var i = 0; i < CATEGORY_ORDER.length; i++) {
+            var cat = CATEGORY_ORDER[i];
+            if (!newsData[cat] || newsData[cat].length === 0) continue;
+
+            var btn = document.createElement("button");
+            btn.className = "cat-btn" + (cat === activeCategory ? " active" : "");
+            btn.setAttribute("role", "tab");
+            btn.innerHTML = escapeHtml(cat) + '<span class="cat-count">' + newsData[cat].length + "</span>";
+            btn.dataset.cat = cat;
+            btn.addEventListener("click", onCatClick);
+            $categories.appendChild(btn);
+        }
+    }
+
+    function onCatClick(e) {
+        activeCategory = e.currentTarget.dataset.cat;
+        renderCategories();
+        renderArticles();
+    }
+
+    function renderArticles() {
+        $articles.innerHTML = "";
+        var articles = newsData[activeCategory] || [];
+
+        if (searchQuery) {
+            var q = searchQuery.toLowerCase();
+            articles = articles.filter(function (a) {
+                return a.title.toLowerCase().indexOf(q) !== -1 ||
+                    (a.description && a.description.toLowerCase().indexOf(q) !== -1) ||
+                    (a.source && a.source.toLowerCase().indexOf(q) !== -1);
+            });
+        }
+
+        var total = newsData["All"] ? newsData["All"].length : 0;
+        $count.textContent = total + " articles";
+
+        if (articles.length === 0) {
+            $articles.innerHTML = '<div class="empty-state">No articles found' +
+                (searchQuery ? " matching your filter" : "") + ".</div>";
+            return;
+        }
+
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < articles.length; i++) {
+            frag.appendChild(createCard(articles[i]));
+        }
+        $articles.appendChild(frag);
+    }
+
+    function createCard(a) {
+        var card = document.createElement("a");
+        card.className = "card";
+        card.href = a.link;
+        card.target = "_blank";
+        card.rel = "noopener noreferrer";
+
+        var meta = document.createElement("div");
+        meta.className = "card-meta";
+
+        var catSpan = document.createElement("span");
+        catSpan.className = "card-category";
+        catSpan.setAttribute("data-cat", a.category || "");
+        catSpan.textContent = a.category || "";
+        meta.appendChild(catSpan);
+
+        if (a.source) {
+            var src = document.createElement("span");
+            src.className = "card-source";
+            src.textContent = a.source;
+            meta.appendChild(src);
+        }
+
+        var date = document.createElement("span");
+        date.className = "card-date";
+        date.textContent = formatDate(a.date);
+        meta.appendChild(date);
+
+        card.appendChild(meta);
+
+        var title = document.createElement("div");
+        title.className = "card-title";
+        title.textContent = a.title;
+        card.appendChild(title);
+
+        if (a.description) {
+            var desc = document.createElement("div");
+            desc.className = "card-desc";
+            desc.textContent = a.description;
+            card.appendChild(desc);
+        }
+
+        return card;
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    function formatDate(dateStr) {
+        if (!dateStr) return "";
+        try {
+            var d = new Date(dateStr);
+            if (isNaN(d.getTime())) return "";
+            var diffMs = Date.now() - d.getTime();
+            var diffMins = Math.floor(diffMs / 60000);
+            if (diffMins < 1) return "just now";
+            if (diffMins < 60) return diffMins + "m ago";
+            var diffHrs = Math.floor(diffMins / 60);
+            if (diffHrs < 24) return diffHrs + "h ago";
+            var diffDays = Math.floor(diffHrs / 24);
+            if (diffDays === 1) return "yesterday";
+            if (diffDays < 7) return diffDays + "d ago";
+            return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        } catch (e) { return ""; }
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    // ── Events ────────────────────────────────────────────────────────────
+
+    $refresh.addEventListener("click", loadNews);
+
+    var searchTimer;
+    $search.addEventListener("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () {
+            searchQuery = $search.value.trim();
+            renderArticles();
+        }, 200);
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "/" && document.activeElement !== $search) {
+            e.preventDefault();
+            $search.focus();
+        }
+        if (e.key === "Escape" && document.activeElement === $search) {
+            $search.value = "";
+            searchQuery = "";
+            $search.blur();
+            renderArticles();
+        }
+    });
+
+    // ── Start ─────────────────────────────────────────────────────────────
+
+    loadNews();
+})();
+</script>
+</body>
+</html>
